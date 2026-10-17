@@ -24,11 +24,17 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 function translateError(message: string): string {
   const m = message.toLowerCase();
-  if (m.includes('invalid login credentials')) return sr.auth.errors.invalidCredentials;
-  if (m.includes('already registered') || m.includes('already exists')) return sr.auth.errors.emailTaken;
-  if (m.includes('email not confirmed')) return sr.auth.errors.emailNotConfirmed;
-  if (m.includes('invalid') && m.includes('email')) return sr.auth.errors.invalidEmail;
-  return sr.auth.errors.generic;
+  const e = sr.auth.errors;
+  if (m.includes('invalid login credentials')) return e.invalidCredentials;
+  if (m.includes('already registered') || m.includes('already exists')) return e.emailTaken;
+  if (m.includes('email not confirmed')) return e.emailNotConfirmed;
+  if (m.includes('rate limit') || m.includes('too many')) return e.rateLimit;
+  if (m.includes('password')) return `${e.weakPassword} (${message})`;
+  if (m.includes('signup') && m.includes('disabled')) return e.signupDisabled;
+  if (m.includes('invalid') && m.includes('email')) return e.invalidEmail;
+  if (m.includes('failed to fetch') || m.includes('network')) return e.network;
+  // Keep the original text visible so unexpected server errors can be diagnosed.
+  return `${e.generic} (${message})`;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
