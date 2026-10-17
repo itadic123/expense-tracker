@@ -20,3 +20,30 @@ export function formatDate(date: Date): string {
 export function monthName(monthIndex: number): string {
   return MONTHS[monthIndex];
 }
+
+// "15.03.1990" -> "1990-03-15"; undefined if the date is not real.
+export function parseSerbianDate(input: string): string | undefined {
+  const m = input.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})\.?$/);
+  if (!m) return undefined;
+  const [day, month, year] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const d = new Date(Date.UTC(year, month - 1, day));
+  if (d.getUTCFullYear() !== year || d.getUTCMonth() !== month - 1 || d.getUTCDate() !== day) return undefined;
+  if (year < 1900 || d > new Date()) return undefined;
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+// "1990-03-15" -> "15.03.1990."
+export function formatIsoDate(iso: string): string {
+  const [y, m, d] = iso.split('-');
+  return `${d}.${m}.${y}.`;
+}
+
+// Accepts "85.000", "85000", "85.000,50" or "85000.50"; undefined if not a non-negative amount.
+export function parseAmount(input: string): number | undefined {
+  let s = input.replace(/\s|дин\.?|rsd/gi, '');
+  if (!s) return undefined;
+  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+  else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+  if (!/^\d+(\.\d{1,2})?$/.test(s)) return undefined;
+  return Number(s);
+}

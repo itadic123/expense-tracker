@@ -5,7 +5,7 @@ Expense tracking app for Android and web, in Serbian Cyrillic with amounts in RS
 ## Status
 
 - [x] Step 1: welcome, sign up and login (email + Google)
-- [ ] Step 2: profile (photo, full name, date of birth, monthly earnings) and dashboard (monthly and annual totals)
+- [x] Step 2: profile (photo, full name, date of birth, monthly earnings) and dashboard (monthly and annual totals)
 - [ ] Step 3: fiscal receipt QR scanning, saved receipts and items, categorization with Claude Haiku
 - [ ] Step 4: web deploy, Android build, visual polish
 
@@ -20,7 +20,7 @@ npm run web            # or: npm run android
 ## Supabase setup
 
 1. Create a project at supabase.com.
-2. In the SQL editor, run `supabase/migrations/0001_profiles.sql`.
+2. In the SQL editor, run each file in `supabase/migrations/` in order (`0001_…`, then `0002_…`).
 3. Copy the project URL and anon key (Project Settings → API) into `.env`.
 4. For Google login: Authentication → Providers → Google, add a Google OAuth client ID and secret, and add `expensetracker://` and your web URL under Authentication → URL Configuration → Redirect URLs.
 
