@@ -1,4 +1,4 @@
-import { CameraView, scanFromURLAsync, useCameraPermissions } from 'expo-camera';
+import { useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
@@ -6,8 +6,10 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 
 
 import { Button } from '../../components/Button';
 import { FormMessage } from '../../components/FormMessage';
+import { QrScanner } from '../../components/QrScanner';
 import { Screen } from '../../components/Screen';
 import { sr } from '../../i18n/sr';
+import { decodeQrFromImageUri } from '../../lib/qr';
 import { isFiscalReceiptUrl, scanReceipt } from '../../lib/receipts';
 import { colors, fonts, radius } from '../../theme';
 
@@ -47,11 +49,14 @@ export default function Scan() {
     const picked = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 1 });
     if (picked.canceled) return;
     try {
-      const codes = await scanFromURLAsync(picked.assets[0].uri, ['qr']);
-      const code = codes.find((c) => isFiscalReceiptUrl(c.data)) ?? codes[0];
+      setBusy(true);
+      const codes = await decodeQrFromImageUri(picked.assets[0].uri);
+      setBusy(false);
+      const code = codes.find(isFiscalReceiptUrl) ?? codes[0];
       if (!code) return setMessage({ error: t.errors.noQrInPhoto });
-      await submit(code.data);
+      await submit(code);
     } catch {
+      setBusy(false);
       setMessage({ error: t.errors.noQrInPhoto });
     }
   }
@@ -66,18 +71,14 @@ export default function Scan() {
 
       <View style={styles.cameraBox}>
         {permission?.granted ? (
-          <CameraView
-            style={StyleSheet.absoluteFill}
-            facing="back"
-            barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
-            onBarcodeScanned={busy ? undefined : ({ data }) => submit(data)}
-          />
+          <QrScanner paused={busy} onScanned={submit} />
         ) : (
           <View style={styles.permission}>
             <Text style={styles.permissionText}>{t.cameraNeeded}</Text>
             <Button label={t.allowCamera} onPress={requestPermission} />
           </View>
         )}
+        {permission?.granted && !busy && <View pointerEvents="none" style={styles.frame} />}
         {busy && (
           <View style={styles.overlay}>
             <ActivityIndicator color={colors.white} size="large" />
@@ -117,6 +118,16 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: colors.accentDark,
     marginBottom: 16,
+  },
+  frame: {
+    position: 'absolute',
+    top: '10%',
+    left: '10%',
+    right: '10%',
+    bottom: '10%',
+    borderWidth: 3,
+    borderColor: colors.accentBright,
+    borderRadius: radius.md,
   },
   permission: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 },
   permissionText: { fontFamily: fonts.medium, fontSize: 16, color: colors.white, textAlign: 'center' },
