@@ -99,6 +99,7 @@ export const sr = {
     pastePlaceholder: 'https://suf.purs.gov.rs/v/?vl=…',
     submit: 'Учитај рачун',
     reading: 'Учитавам рачун…',
+    tryAgain: 'Скенирај поново',
     errors: {
       notFiscal: 'Ово није QR код фискалног рачуна.',
       noQrInPhoto: 'На слици није пронађен QR код.',

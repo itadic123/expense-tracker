@@ -18,13 +18,18 @@ export default function Scan() {
   const [link, setLink] = useState('');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ error?: string; info?: string }>({});
+  // After a failed attempt the camera stops until the user asks to try again, so the same code isn't re-sent in a loop.
+  const [stopped, setStopped] = useState(false);
   // The camera fires many times per second; only handle the first code until we're done with it.
   const handling = useRef(false);
   const t = sr.scan;
 
   async function submit(url: string) {
     if (handling.current) return;
-    if (!isFiscalReceiptUrl(url)) return setMessage({ error: t.errors.notFiscal });
+    if (!isFiscalReceiptUrl(url)) {
+      setStopped(true);
+      return setMessage({ error: t.errors.notFiscal });
+    }
     handling.current = true;
     setBusy(true);
     setMessage({});
@@ -41,7 +46,9 @@ export default function Scan() {
       save_failed: t.errors.saveFailed,
       unknown: t.errors.generic,
     };
-    setMessage({ error: errors[result.error] });
+    const detail = 'detail' in result && result.detail ? ` (${result.detail})` : '';
+    setMessage({ error: errors[result.error] + detail });
+    setStopped(true);
   }
 
   async function fromPhoto() {
@@ -71,14 +78,25 @@ export default function Scan() {
 
       <View style={styles.cameraBox}>
         {permission?.granted ? (
-          <QrScanner paused={busy} onScanned={submit} />
+          <QrScanner paused={busy || stopped} onScanned={submit} />
         ) : (
           <View style={styles.permission}>
             <Text style={styles.permissionText}>{t.cameraNeeded}</Text>
             <Button label={t.allowCamera} onPress={requestPermission} />
           </View>
         )}
-        {permission?.granted && !busy && <View pointerEvents="none" style={styles.frame} />}
+        {permission?.granted && !busy && !stopped && <View pointerEvents="none" style={styles.frame} />}
+        {permission?.granted && stopped && !busy && (
+          <View style={styles.overlay}>
+            <Button
+              label={t.tryAgain}
+              onPress={() => {
+                setMessage({});
+                setStopped(false);
+              }}
+            />
+          </View>
+        )}
         {busy && (
           <View style={styles.overlay}>
             <ActivityIndicator color={colors.white} size="large" />

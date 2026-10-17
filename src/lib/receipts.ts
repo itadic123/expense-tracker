@@ -42,7 +42,7 @@ export type ReceiptDetail = ReceiptSummary & { receipt_number: string | null; it
 
 export type ScanResult =
   | { ok: true; id: string; duplicate: boolean }
-  | { ok: false; error: 'not_fiscal_receipt' | 'read_failed' | 'save_failed' | 'unknown' };
+  | { ok: false; error: 'not_fiscal_receipt' | 'read_failed' | 'save_failed' | 'unknown'; detail?: string };
 
 export function isFiscalReceiptUrl(text: string): boolean {
   try {
@@ -60,12 +60,16 @@ export async function scanReceipt(url: string): Promise<ScanResult> {
 
   // On non-2xx responses the error carries the original Response with our { error } body.
   let code: string | undefined;
+  let status: number | undefined;
   try {
     const context = (error as { context?: Response } | null)?.context;
+    status = context?.status;
     code = context ? (await context.json()).error : undefined;
   } catch {}
   if (code === 'not_fiscal_receipt' || code === 'read_failed' || code === 'save_failed') return { ok: false, error: code };
-  return { ok: false, error: 'unknown' };
+  // Shown to the user so a missing or failing server function can be diagnosed from a screenshot.
+  const detail = [status && `HTTP ${status}`, code, error?.message].filter(Boolean).join(' · ');
+  return { ok: false, error: 'unknown', detail: detail || undefined };
 }
 
 export async function fetchReceipt(id: string): Promise<ReceiptDetail | null> {
