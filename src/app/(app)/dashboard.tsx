@@ -73,10 +73,9 @@ export default function Dashboard() {
           <Text style={styles.cardLabel}>{t.thisYear}</Text>
           <Text style={styles.cardYearAmount}>{formatRSD(totals?.year ?? 0)}</Text>
         </View>
-        <View style={styles.scanButton}>
+        <Pressable style={styles.scanButton} onPress={() => router.push('/scan')} accessibilityRole="button">
           <Text style={styles.scanText}>{t.scan}</Text>
-          <Text style={styles.soon}>{t.soon}</Text>
-        </View>
+        </Pressable>
       </LinearGradient>
 
       {loadError && <Text style={styles.error}>{t.loadError}</Text>}
@@ -95,7 +94,11 @@ export default function Dashboard() {
       <Text style={styles.sectionTitle}>{t.recent}</Text>
       {totals?.recent.length ? (
         totals.recent.map((r) => (
-          <View key={r.id} style={styles.row}>
+          <Pressable
+            key={r.id}
+            style={styles.row}
+            onPress={() => router.push({ pathname: '/receipt/[id]', params: { id: r.id } })}
+          >
             <View style={styles.rowText}>
               <Text style={styles.rowTitle} numberOfLines={1}>
                 {r.store_name ?? '—'}
@@ -103,7 +106,7 @@ export default function Dashboard() {
               <Text style={styles.rowSub}>{formatDate(new Date(r.issued_at))}</Text>
             </View>
             <Text style={styles.rowAmount}>-{formatRSD(r.total)}</Text>
-          </View>
+          </Pressable>
         ))
       ) : (
         <View style={styles.row}>
@@ -146,10 +149,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    opacity: 0.85,
   },
   scanText: { fontFamily: fonts.semibold, fontSize: 16, color: colors.text },
-  soon: { fontFamily: fonts.medium, fontSize: 12, color: colors.textMuted },
   error: { fontFamily: fonts.medium, color: colors.danger, marginBottom: 12, textAlign: 'center' },
   tiles: { flexDirection: 'row', gap: 12, marginBottom: 24 },
   tile: { flex: 1, backgroundColor: colors.surface, borderRadius: radius.md, padding: 16, gap: 8 },
