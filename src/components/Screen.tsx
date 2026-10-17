@@ -5,12 +5,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../theme';
 
 // Centers content in a phone-width column so the web app looks like the mobile design.
-type Props = { children: ReactNode; scroll?: boolean; refreshControl?: ReactElement<RefreshControlProps> };
+type Props = { children: ReactNode; scroll?: boolean; refreshControl?: ReactElement<RefreshControlProps>; withNav?: boolean };
 
-export function Screen({ children, scroll = true, refreshControl }: Props) {
+const ALL_EDGES = ['top', 'right', 'bottom', 'left'] as const;
+// The bottom nav already keeps clear of the home indicator.
+const NAV_EDGES = ['top', 'right', 'left'] as const;
+
+export function Screen({ children, scroll = true, refreshControl, withNav = false }: Props) {
+  const edges = withNav ? NAV_EDGES : ALL_EDGES;
   const content = <View style={styles.column}>{children}</View>;
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={edges}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {scroll ? (
           <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" refreshControl={refreshControl}>

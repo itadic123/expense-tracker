@@ -49,7 +49,7 @@ export default function Receipt() {
   const categoryTotals = [...byCategory.entries()].sort((a, b) => b[1] - a[1]);
 
   return (
-    <Screen>
+    <Screen withNav>
       <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/dashboard'))} hitSlop={10}>
         <Text style={styles.back}>‹ {sr.profile.back}</Text>
       </Pressable>

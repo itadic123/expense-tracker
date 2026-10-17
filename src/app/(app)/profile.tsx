@@ -59,10 +59,7 @@ export default function ProfileScreen() {
   const dob = profile?.date_of_birth ?? null;
 
   return (
-    <Screen>
-      <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/dashboard'))} hitSlop={10}>
-        <Text style={styles.back}>‹ {t.back}</Text>
-      </Pressable>
+    <Screen withNav>
       <Text style={styles.title}>{t.title}</Text>
 
       <View style={styles.photo}>
@@ -129,7 +126,6 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  back: { fontFamily: fonts.semibold, fontSize: 16, color: colors.accent, marginBottom: 12 },
   title: { fontFamily: fonts.bold, fontSize: 28, color: colors.text, marginBottom: 20 },
   photo: { alignItems: 'center', gap: 12, marginBottom: 24 },
   uploading: {

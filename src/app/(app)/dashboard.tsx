@@ -46,7 +46,7 @@ export default function Dashboard() {
   const earnings = profile?.monthly_earnings;
 
   return (
-    <Screen refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.accent} />}>
+    <Screen withNav refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.accent} />}>
       <View style={styles.header}>
         <Pressable style={styles.user} onPress={() => router.push('/profile')} accessibilityRole="button">
           <Avatar url={profile?.avatar_url} name={name} />

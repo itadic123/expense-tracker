@@ -69,10 +69,7 @@ export default function Scan() {
   }
 
   return (
-    <Screen>
-      <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/dashboard'))} hitSlop={10}>
-        <Text style={styles.back}>‹ {sr.profile.back}</Text>
-      </Pressable>
+    <Screen withNav>
       <Text style={styles.title}>{t.title}</Text>
       <Text style={styles.hint}>{t.hint}</Text>
 
@@ -127,7 +124,6 @@ export default function Scan() {
 }
 
 const styles = StyleSheet.create({
-  back: { fontFamily: fonts.semibold, fontSize: 16, color: colors.accent, marginBottom: 12 },
   title: { fontFamily: fonts.bold, fontSize: 28, color: colors.text },
   hint: { fontFamily: fonts.regular, fontSize: 15, color: colors.textMuted, marginTop: 6, marginBottom: 16 },
   cameraBox: {

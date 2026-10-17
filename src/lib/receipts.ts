@@ -97,3 +97,45 @@ export async function updateItemCategory(itemId: string, category: string): Prom
   const { error } = await supabase!.from('receipt_items').update({ category }).eq('id', itemId);
   if (error) throw error;
 }
+
+// Spending per month ("2026-03") with a per-category split, for the statistics screen.
+export type MonthStats = { total: number; byCategory: Record<string, number> };
+export type Statistics = Record<string, MonthStats>;
+
+export function monthKey(year: number, monthIndex: number): string {
+  const d = new Date(year, monthIndex, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+// Loads the given year plus the 6 months before it, so January can be compared with December
+// and every month has a 6-month trend.
+export async function fetchStatistics(year: number): Promise<Statistics> {
+  const from = new Date(year, -6, 1).toISOString();
+  const to = new Date(year + 1, 0, 1).toISOString();
+  const [receipts, items] = await Promise.all([
+    supabase!.from('receipts').select('total, issued_at').gte('issued_at', from).lt('issued_at', to),
+    supabase!
+      .from('receipt_items')
+      .select('total, category, receipts!inner(issued_at)')
+      .gte('receipts.issued_at', from)
+      .lt('receipts.issued_at', to),
+  ]);
+  if (receipts.error) throw receipts.error;
+  if (items.error) throw items.error;
+
+  const stats: Statistics = {};
+  const month = (iso: string) => {
+    const d = new Date(iso);
+    return (stats[monthKey(d.getFullYear(), d.getMonth())] ??= { total: 0, byCategory: {} });
+  };
+  for (const r of receipts.data) month(r.issued_at).total += Number(r.total);
+  for (const item of items.data) {
+    // Supabase types an embedded row as an array or object depending on the relation; handle both.
+    const parent = Array.isArray(item.receipts) ? item.receipts[0] : item.receipts;
+    if (!parent) continue;
+    const m = month(parent.issued_at);
+    const category = item.category ?? 'Остало';
+    m.byCategory[category] = (m.byCategory[category] ?? 0) + Number(item.total);
+  }
+  return stats;
+}
