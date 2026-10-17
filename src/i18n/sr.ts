@@ -20,6 +20,8 @@ export const sr = {
     email: 'Имејл',
     password: 'Лозинка',
     confirmPassword: 'Потврдите лозинку',
+    showPassword: 'Прикажи',
+    hidePassword: 'Сакриј',
     login: 'Пријави се',
     signup: 'Направи налог',
     google: 'Настави са Google налогом',
