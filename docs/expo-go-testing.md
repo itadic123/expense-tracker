@@ -62,3 +62,27 @@ Your `.env` file stays as it is.
 - Google login: not yet, it hasn't been set up.
 
 Expo Go is only for testing. The real standalone Android app (an APK you install without Expo Go) is built separately with EAS.
+
+## Права Android апликација (standalone APK)
+
+When testing in Expo Go looks good, this builds an APK you can install on any Android phone without Expo Go. The build runs in Expo's cloud, so nothing extra is needed on your computer.
+
+1. Create a free account at https://expo.dev/signup.
+2. In the `expense-tracker` folder, in `cmd`:
+   ```
+   npx eas-cli@latest login
+   npx eas-cli@latest init
+   ```
+   `init` links the project to your Expo account; answer `y` to its questions.
+3. Give the build the Supabase keys (the `.env` file is not uploaded). Run each line once, with your real values:
+   ```
+   npx eas-cli@latest env:create --name EXPO_PUBLIC_SUPABASE_URL --value https://jsudeypbotgqycjsvrxw.supabase.co --environment preview --environment production --visibility plaintext
+   npx eas-cli@latest env:create --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value YOUR_ANON_KEY --environment preview --environment production --visibility plaintext
+   ```
+4. Build:
+   ```
+   npx eas-cli@latest build -p android --profile preview
+   ```
+   It answers `y` to create a signing key the first time. The build takes about 10–20 minutes; when it finishes, it prints a link and a QR code. Open it on the phone, download the APK and install it (Android asks to allow installing from this source).
+
+For the Google Play Store later, the same command with `--profile production` makes the file Google wants.

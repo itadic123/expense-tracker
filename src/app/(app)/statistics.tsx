@@ -5,6 +5,7 @@ import { Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native'
 import { Screen } from '../../components/Screen';
 import { sr } from '../../i18n/sr';
 import { formatRSD, monthName } from '../../lib/format';
+import { useIsWide } from '../../lib/layout';
 import { fetchStatistics, monthKey, Statistics } from '../../lib/receipts';
 import { colors, fonts, radius } from '../../theme';
 
@@ -17,6 +18,7 @@ export default function StatisticsScreen() {
   const [stats, setStats] = useState<Statistics | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const wide = useIsWide();
   const t = sr.statistics;
 
   const load = useCallback(async (forYear: number) => {
@@ -57,65 +59,76 @@ export default function StatisticsScreen() {
       name,
       amount: current?.byCategory[name] ?? 0,
       previous: previous?.byCategory[name] ?? 0,
-      trend: Array.from({ length: TREND_MONTHS }, (_, i) => stats?.[monthKey(year, month - TREND_MONTHS + 1 + i)]?.byCategory[name] ?? 0),
+      trend: Array.from(
+        { length: TREND_MONTHS },
+        (_, i) => stats?.[monthKey(year, month - TREND_MONTHS + 1 + i)]?.byCategory[name] ?? 0,
+      ),
     }))
     .sort((a, b) => b.amount - a.amount || b.previous - a.previous);
   const categoryTotal = categories.reduce((sum, c) => sum + c.amount, 0);
 
   return (
-    <Screen withNav refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.accent} />}>
+    <Screen
+      withNav
+      wide
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.accent} />}
+    >
       <Text style={styles.title}>{t.title}</Text>
 
-      <View style={styles.yearCard}>
-        <View style={styles.yearRow}>
-          <Pressable onPress={() => changeYear(year - 1)} hitSlop={12} accessibilityLabel={t.previousYear}>
-            <Text style={styles.yearArrow}>‹</Text>
-          </Pressable>
-          <Text style={styles.yearText}>{year}.</Text>
-          <Pressable
-            onPress={() => changeYear(year + 1)}
-            hitSlop={12}
-            disabled={year >= now.getFullYear()}
-            accessibilityLabel={t.nextYear}
-          >
-            <Text style={[styles.yearArrow, year >= now.getFullYear() && styles.disabled]}>›</Text>
-          </Pressable>
+      <View style={wide ? styles.topRow : undefined}>
+        <View style={[styles.yearCard, wide && styles.yearCardWide]}>
+          <View style={styles.yearRow}>
+            <Pressable onPress={() => changeYear(year - 1)} hitSlop={12} accessibilityLabel={t.previousYear}>
+              <Text style={styles.yearArrow}>‹</Text>
+            </Pressable>
+            <Text style={styles.yearText}>{year}.</Text>
+            <Pressable
+              onPress={() => changeYear(year + 1)}
+              hitSlop={12}
+              disabled={year >= now.getFullYear()}
+              accessibilityLabel={t.nextYear}
+            >
+              <Text style={[styles.yearArrow, year >= now.getFullYear() && styles.disabled]}>›</Text>
+            </Pressable>
+          </View>
+          <Text style={styles.yearLabel}>{t.yearTotal}</Text>
+          <Text style={styles.yearAmount}>{formatRSD(yearTotal)}</Text>
         </View>
-        <Text style={styles.yearLabel}>{t.yearTotal}</Text>
-        <Text style={styles.yearAmount}>{formatRSD(yearTotal)}</Text>
+
+        <View style={wide ? styles.chartColumn : undefined}>
+          <Text style={[styles.sectionTitle, wide && styles.sectionTitleTop]}>{t.byMonth}</Text>
+          <View style={styles.card}>
+            <View style={styles.chart}>
+              {Array.from({ length: 12 }, (_, m) => {
+                const selected = m === month;
+                const value = monthTotal(m);
+                return (
+                  <Pressable key={m} style={styles.barSlot} onPress={() => setMonth(m)} accessibilityLabel={monthName(m)}>
+                    <View style={styles.barTrack}>
+                      <View
+                        style={[
+                          styles.bar,
+                          { height: `${value > 0 ? Math.max(4, (value / maxMonth) * 100) : 0}%` },
+                          selected ? styles.barSelected : null,
+                        ]}
+                      />
+                    </View>
+                    <Text style={[styles.barLabel, selected && styles.barLabelSelected]}>{monthName(m).slice(0, 3)}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <View style={styles.monthSummary}>
+              <Text style={styles.monthName}>
+                {monthName(month)} {year}.
+              </Text>
+              <Text style={styles.monthAmount}>{formatRSD(monthTotal(month))}</Text>
+            </View>
+          </View>
+        </View>
       </View>
 
       {loadError && <Text style={styles.error}>{t.loadError}</Text>}
-
-      <Text style={styles.sectionTitle}>{t.byMonth}</Text>
-      <View style={styles.card}>
-        <View style={styles.chart}>
-          {Array.from({ length: 12 }, (_, m) => {
-            const selected = m === month;
-            const value = monthTotal(m);
-            return (
-              <Pressable key={m} style={styles.barSlot} onPress={() => setMonth(m)} accessibilityLabel={monthName(m)}>
-                <View style={styles.barTrack}>
-                  <View
-                    style={[
-                      styles.bar,
-                      { height: `${value > 0 ? Math.max(4, (value / maxMonth) * 100) : 0}%` },
-                      selected ? styles.barSelected : null,
-                    ]}
-                  />
-                </View>
-                <Text style={[styles.barLabel, selected && styles.barLabelSelected]}>{monthName(m).slice(0, 3)}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-        <View style={styles.monthSummary}>
-          <Text style={styles.monthName}>
-            {monthName(month)} {year}.
-          </Text>
-          <Text style={styles.monthAmount}>{formatRSD(monthTotal(month))}</Text>
-        </View>
-      </View>
 
       <Text style={styles.sectionTitle}>{t.byCategory}</Text>
       {categories.length === 0 ? (
@@ -124,9 +137,13 @@ export default function StatisticsScreen() {
         </View>
       ) : (
         <>
-          {categories.map((c) => (
-            <CategoryRow key={c.name} {...c} share={categoryTotal > 0 ? c.amount / categoryTotal : 0} />
-          ))}
+          <View style={wide ? styles.grid : undefined}>
+            {categories.map((c) => (
+              <View key={c.name} style={wide ? styles.gridCell : undefined}>
+                <CategoryRow {...c} share={categoryTotal > 0 ? c.amount / categoryTotal : 0} />
+              </View>
+            ))}
+          </View>
           <Text style={styles.hint}>{t.trendHint}</Text>
         </>
       )}
@@ -182,6 +199,12 @@ function CategoryRow(props: { name: string; amount: number; previous: number; sh
 }
 
 const styles = StyleSheet.create({
+  topRow: { flexDirection: 'row', gap: 24, alignItems: 'stretch' },
+  yearCardWide: { width: 320, marginBottom: 0, justifyContent: 'center' },
+  chartColumn: { flex: 1 },
+  sectionTitleTop: { marginTop: 0 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -6 },
+  gridCell: { width: '50%', paddingHorizontal: 6 },
   title: { fontFamily: fonts.bold, fontSize: 28, color: colors.text, marginBottom: 16 },
   yearCard: { backgroundColor: colors.black, borderRadius: radius.lg, padding: 22, marginBottom: 8 },
   yearRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },

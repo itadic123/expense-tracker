@@ -139,3 +139,23 @@ export async function fetchStatistics(year: number): Promise<Statistics> {
   }
   return stats;
 }
+
+export type ReceiptListItem = ReceiptSummary & { item_count: number };
+
+// Every receipt of the year, newest first, for the receipts page.
+export async function fetchReceiptsForYear(year: number): Promise<ReceiptListItem[]> {
+  const { data, error } = await supabase!
+    .from('receipts')
+    .select('id, store_name, total, issued_at, receipt_items(count)')
+    .gte('issued_at', new Date(year, 0, 1).toISOString())
+    .lt('issued_at', new Date(year + 1, 0, 1).toISOString())
+    .order('issued_at', { ascending: false });
+  if (error) throw error;
+  return data.map((r) => ({
+    id: r.id,
+    store_name: r.store_name,
+    total: Number(r.total),
+    issued_at: r.issued_at,
+    item_count: (r.receipt_items as unknown as { count: number }[])[0]?.count ?? 0,
+  }));
+}

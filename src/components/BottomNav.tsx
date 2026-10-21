@@ -1,42 +1,31 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, usePathname } from 'expo-router';
-import { ComponentProps } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { sr } from '../i18n/sr';
 import { colors, radius } from '../theme';
+import { isActive, NAV_ITEMS } from './navItems';
 
-type IconName = ComponentProps<typeof Ionicons>['name'];
-type Tab = { href: '/dashboard' | '/scan' | '/statistics' | '/profile'; label: string; icon: IconName; activeIcon: IconName };
-
-const TABS: Tab[] = [
-  { href: '/dashboard', label: sr.nav.home, icon: 'home-outline', activeIcon: 'home' },
-  { href: '/scan', label: sr.nav.scan, icon: 'qr-code-outline', activeIcon: 'qr-code' },
-  { href: '/statistics', label: sr.nav.statistics, icon: 'stats-chart-outline', activeIcon: 'stats-chart' },
-  { href: '/profile', label: sr.nav.profile, icon: 'person-outline', activeIcon: 'person' },
-];
-
-// Black pill with icon buttons, shown at the bottom of every signed-in screen.
+// Black pill with icon buttons, shown at the bottom of every signed-in screen on phones.
 export function BottomNav() {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 12) }]}>
       <View style={styles.bar}>
-        {TABS.map((tab) => {
-          const active = pathname === tab.href;
+        {NAV_ITEMS.map((item) => {
+          const active = isActive(pathname, item.href);
           return (
             <Pressable
-              key={tab.href}
-              onPress={() => !active && router.navigate(tab.href)}
+              key={item.href}
+              onPress={() => pathname !== item.href && router.navigate(item.href)}
               accessibilityRole="button"
-              accessibilityLabel={tab.label}
+              accessibilityLabel={item.label}
               accessibilityState={{ selected: active }}
-              hitSlop={6}
+              hitSlop={4}
               style={[styles.button, active && styles.active]}
             >
-              <Ionicons name={active ? tab.activeIcon : tab.icon} size={22} color={active ? colors.black : colors.white} />
+              <Ionicons name={active ? item.activeIcon : item.icon} size={22} color={active ? colors.black : colors.white} />
             </Pressable>
           );
         })}

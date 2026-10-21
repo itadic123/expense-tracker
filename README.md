@@ -7,7 +7,8 @@ Expense tracking app for Android and web, in Serbian Cyrillic with amounts in RS
 - [x] Step 1: welcome, sign up and login (email + Google)
 - [x] Step 2: profile (photo, full name, date of birth, monthly earnings) and dashboard (monthly and annual totals)
 - [x] Step 3: fiscal receipt QR scanning, saved receipts and items, categorization with Claude Haiku
-- [ ] Step 4: web deploy, Android build, visual polish
+- [x] Navigation (phone bottom bar, desktop side menu), statistics, receipts list, desktop web layout
+- [ ] Step 4: web deploy, Android build (EAS config ready, see docs/expo-go-testing.md), visual polish
 
 ## Run it
 
@@ -17,7 +18,7 @@ cp .env.example .env   # then fill in the Supabase URL and anon key
 npm run web            # or: npm run android
 ```
 
-Testing on a phone with Expo Go, step by step: [docs/expo-go-testing.md](docs/expo-go-testing.md).
+Testing on a phone with Expo Go, and building the standalone Android APK, step by step: [docs/expo-go-testing.md](docs/expo-go-testing.md).
 
 ## Supabase setup
 
