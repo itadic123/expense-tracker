@@ -17,6 +17,8 @@ cp .env.example .env   # then fill in the Supabase URL and anon key
 npm run web            # or: npm run android
 ```
 
+Testing on a phone with Expo Go, step by step: [docs/expo-go-testing.md](docs/expo-go-testing.md).
+
 ## Supabase setup
 
 1. Create a project at supabase.com.
